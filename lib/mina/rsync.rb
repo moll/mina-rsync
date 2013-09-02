@@ -27,6 +27,7 @@ end
 
 rsync_cache = lambda do
   cache = settings.rsync_cache
+  raise TypeError, "Please set rsync_cache." unless cache
   cache = settings.deploy_to + "/" + cache if cache && cache !~ /^\//
   cache
 end
