@@ -18,11 +18,9 @@ set_default :rsync_stage, "tmp/deploy"
 set_default :rsync_cache, "shared/deploy"
 
 run = lambda do |*cmd|
-  if simulate_mode?
-    puts "$ #{cmd.join(" ")}"
-  else
-    Kernel.system *cmd
-  end
+  cmd = cmd[0] if cmd[0].is_a?(Array)
+  print_command cmd.join(" ") if simulate_mode? || verbose_mode?
+  Kernel.system *cmd unless simulate_mode?
 end
 
 rsync_cache = lambda do
@@ -34,7 +32,7 @@ end
 
 desc "Stage and rsync to the server (or its cache)."
 task :rsync => %w[rsync:stage] do
-  puts "Rsyncing to #{rsync_cache.call}..."
+  print_status "Rsyncing to #{rsync_cache.call}..."
 
   rsync = %w[rsync]
   rsync.concat settings.rsync_options
@@ -44,34 +42,37 @@ task :rsync => %w[rsync:stage] do
   host = settings.domain
   rsync << "#{user}#{host}:#{rsync_cache.call}"
 
-  run.call *rsync
+  run.call rsync
 end
 
 namespace :rsync do
   task :create_stage do
     next if File.directory?(settings.rsync_stage)
-    puts "Cloning repository for the first time..."
+    print_status "Cloning repository for the first time..."
 
-    clone = %W[git clone]
+    clone = %w[git clone]
     clone << settings.repository
     clone << settings.rsync_stage
-    run.call *clone
+    run.call clone
   end
 
   desc "Stage the repository in a local directory."
   task :stage => %w[create_stage] do
-    puts "Staging..."
+    print_status "Staging..."
 
-    puts "$ cd #{settings.rsync_stage}" if simulate_mode?
-    Dir.chdir settings.rsync_stage do
-      run.call *%W[git fetch --quiet --all --prune]
-      print "Git checkout: "
-      run.call *%W[git reset --hard origin/#{settings.branch}]
-    end
+    stage = settings.rsync_stage
+    git = %W[git --git-dir #{stage}/.git --work-tree #{stage}]
+    run.call git + %w[fetch --quiet --all --prune]
+
+    # Prefix the Git "HEAD is now at" message, but only if verbose is unset,
+    # because then the #print_command called by #run prints its own prefix.
+    print "Git checkout: " unless simulate_mode? || verbose_mode?
+    run.call git + %W[reset --hard origin/#{settings.branch}]
   end
 
   task :build do
-    queue %(#{settings.rsync_copy} "#{rsync_cache.call}/" ".")
+    queue %(echo "-> Copying from cache directory to build path")
+    queue! %(#{settings.rsync_copy} "#{rsync_cache.call}/" ".")
   end
 
   desc "Stage, rsync and copy to the build path."
