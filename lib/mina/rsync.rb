@@ -34,7 +34,7 @@ end
 
 desc "Stage and rsync to the server (or its cache)."
 task :rsync => %w[rsync:stage] do
-  puts "Rsyncing..."
+  puts "Rsyncing to #{rsync_cache.call}..."
 
   rsync = %w[rsync]
   rsync.concat settings.rsync_options
@@ -60,11 +60,12 @@ namespace :rsync do
 
   desc "Stage the repository in a local directory."
   task :stage => %w[create_stage] do
-    puts "Staging for rsyncing..."
+    puts "Staging..."
 
     puts "$ cd #{settings.rsync_stage}" if simulate_mode?
     Dir.chdir settings.rsync_stage do
       run.call *%W[git fetch --quiet --all --prune]
+      print "Git checkout: "
       run.call *%W[git reset --hard origin/#{settings.branch}]
     end
   end
