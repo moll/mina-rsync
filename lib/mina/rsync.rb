@@ -25,13 +25,13 @@ run = lambda do |*cmd|
   end
 end
 
-rsync_path = lambda do
-  path = settings.deploy_to
-  path += "/" + settings.rsync_cache if settings.rsync_cache
-  path
+rsync_cache = lambda do
+  cache = settings.rsync_cache
+  cache = settings.deploy_to + "/" + cache if cache && cache !~ /^\//
+  cache
 end
 
-desc "Stage and rsync to the server."
+desc "Stage and rsync to the server (or its cache)."
 task :rsync => %w[rsync:stage] do
   puts "Rsyncing..."
 
@@ -41,13 +41,13 @@ task :rsync => %w[rsync:stage] do
 
   user = settings.user + "@" if settings.user
   host = settings.domain
-  rsync << "#{user}#{host}:#{rsync_path.call}"
+  rsync << "#{user}#{host}:#{rsync_cache.call}"
 
   run.call *rsync
 end
 
 namespace :rsync do
-  task :clone_stage do
+  task :create_stage do
     next if File.directory?(settings.rsync_stage)
     puts "Cloning repository for the first time..."
 
@@ -58,7 +58,7 @@ namespace :rsync do
   end
 
   desc "Stage the repository in a local directory."
-  task :stage => %w[clone_stage] do
+  task :stage => %w[create_stage] do
     puts "Staging for rsyncing..."
 
     puts "$ cd #{settings.rsync_stage}" if simulate_mode?
@@ -68,8 +68,10 @@ namespace :rsync do
     end
   end
 
-  desc "Copy the cache to the build path."
   task :build do
-    queue %(#{settings.rsync_copy} "#{rsync_path.call}/" ".")
+    queue %(#{settings.rsync_copy} "#{rsync_cache.call}/" ".")
   end
+
+  desc "Stage, rsync and copy to the build path."
+  task :deploy => %w[rsync build]
 end
