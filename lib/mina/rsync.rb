@@ -1,12 +1,21 @@
 require File.expand_path("../rsync/version", __FILE__)
 
+# NOTE: Please don't depend on tasks without a description (`desc`) remaining
+# as they are between minor or patch version releases. They make up the private
+# API and internalas of Mina::Rsync. If you think something should be public
+# for extending, please let me know!
+
+set_default :repository, "."
+set_default :branch, "master"
 set_default :rsync_options, []
 set_default :rsync_copy, "rsync --archive --acls --xattrs"
+
 # Stage is used on your local machine for rsyncing from.
 set_default :rsync_stage, "tmp/deploy"
+
 # Cache is used on the server to copy files to from to the release directory.
 # Saves you rsyncing your whole app folder each time.
-set_default :rsync_cache, "tmp/deploy"
+set_default :rsync_cache, "shared/deploy"
 
 run = lambda do |*cmd|
   if simulate_mode?
