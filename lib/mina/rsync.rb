@@ -1,9 +1,9 @@
 require File.expand_path("../rsync/version", __FILE__)
 
-# NOTE: Please don't depend on tasks without a description (`desc`) remaining
-# as they are between minor or patch version releases. They make up the private
-# API and internalas of Mina::Rsync. If you think something should be public
-# for extending, please let me know!
+# NOTE: Please don't depend on tasks without a description (`desc`) as they
+# might change between minor or patch version releases. They make up the
+# private API and internals of Mina::Rsync. If you think something should be
+# public for extending and hooking, please let me know!
 
 set_default :repository, "."
 set_default :branch, "master"
