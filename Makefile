@@ -8,5 +8,9 @@ pack:
 
 publish:
 	gem push $(NAME)-*.gem
+
+clean:
+	rm -rf *.gem
 	
 .PHONY: love pack publish
+.PHONY: clean
