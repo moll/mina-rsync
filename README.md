@@ -89,6 +89,7 @@ branch        | `master` | The Git branch to checkout.
 rsync_stage   | `tmp/deploy` | Path where to clone your repository for staging, checkouting and rsyncing. Can be both relative or absolute.
 rsync_cache   | `shared/deploy` | Path where to cache your repository on the server to avoid rsyncing from scratch each time. Can be both relative or absolute.
 rsync_options | `[]` | Array of options to pass to `rsync`.  
+rsync_copy    | `rsync --archive --acls --xattrs` | Command used to copy files from the cache directory to the build path on the server.
 
 
 License
