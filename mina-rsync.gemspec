@@ -1,9 +1,9 @@
-require File.expand_path("../lib/mina/rsync/version", __FILE__)
+require "./lib/mina_rsync/version.rb"
 
 Gem::Specification.new do |gem|
   gem.name = "mina-rsync"
-  gem.version = Mina::Rsync::VERSION
-  gem.homepage = "https://github.com/moll/mina-rsync"
+  gem.version = MinaRsync.version
+  gem.homepage = "https://github.com/andywatts/mina-rsync"
   gem.summary = <<-end.strip.gsub(/\s*\n\s*/, " ")
     Deploy with Rsync from any local (or remote) repository.
   end
