@@ -30,6 +30,11 @@ Set some `rsync_options` to your liking:
 set :rsync_options, %w[--recursive --delete --delete-excluded --exclude .git*]
 ```
 
+You can also define custom ssh ports for rsync if needed :
+```ruby
+set :rsync_options, %w[.git*] + ["-e", "ssh -p 1024"]
+```
+
 Then invoke Mina::Rsync's tasks from your `deploy` task:
 ```ruby
 task :deploy do
