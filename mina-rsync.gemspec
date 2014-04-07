@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require "./lib/mina_rsync/version.rb"
 
 Gem::Specification.new do |gem|
