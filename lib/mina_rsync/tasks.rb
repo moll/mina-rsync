@@ -1,4 +1,6 @@
-require File.expand_path("../rsync/version", __FILE__)
+require 'mina/bundler'
+require 'mina/rails'
+#require File.expand_path("../rsync/version", __FILE__)
 
 # NOTE: Please don't depend on tasks without a description (`desc`) as they
 # might change between minor or patch version releases. They make up the
