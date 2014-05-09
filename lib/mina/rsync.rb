@@ -61,13 +61,15 @@ namespace :rsync do
     print_status "Staging..."
 
     stage = settings.rsync_stage
-    git = %W[git --git-dir #{stage}/.git --work-tree #{stage}]
-    run.call git + %w[fetch --quiet --all --prune]
+    git = %W[git]
+    Dir.chdir("#{stage}") do
+      run.call git + %w[fetch --quiet --all --prune]
 
-    # Prefix the Git "HEAD is now at" message, but only if verbose is unset,
-    # because then the #print_command called by #run prints its own prefix.
-    print "Git checkout: " unless simulate_mode? || verbose_mode?
-    run.call git + %W[reset --hard origin/#{settings.branch}]
+      # Prefix the Git "HEAD is now at" message, but only if verbose is unset,
+      # because then the #print_command called by #run prints its own prefix.
+      print "Git checkout: " unless simulate_mode? || verbose_mode?
+      run.call git + %W[reset --hard origin/#{settings.branch}]
+    end
   end
 
   task :build do
