@@ -71,8 +71,8 @@ namespace :rsync do
   end
 
   task :build do
-    queue %(echo "-> Copying from cache directory to build path")
-    queue! %(#{fetch(:rsync_copy)} "#{rsync_cache.call}/" ".")
+    command %(echo "-> Copying from cache directory to build path")
+    command! %(#{fetch(:rsync_copy)} "#{rsync_cache.call}/" ".")
   end
 
   desc "Stage, rsync and copy to the build path."
