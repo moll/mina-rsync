@@ -24,9 +24,9 @@ run = lambda do |*cmd|
 end
 
 rsync_cache = lambda do
-  cache = settings.rsync_cache
+  cache = fetch(:rsync_cache)
   raise TypeError, "Please set rsync_cache." unless cache
-  cache = settings.deploy_to + "/" + cache if cache && cache !~ /^\//
+  cache = fetch(:deploy_to) + "/" + cache if cache && cache !~ /^\//
   cache
 end
 
@@ -35,11 +35,11 @@ task :rsync => %w[rsync:stage] do
   print_status "Rsyncing to #{rsync_cache.call}..."
 
   rsync = %w[rsync]
-  rsync.concat settings.rsync_options
-  rsync << settings.rsync_stage + "/"
+  rsync.concat fetch(:rsync_options)
+  rsync << fetch(:rsync_stage) + "/"
 
-  user = settings.user + "@" if settings.user
-  host = settings.domain
+  user = fetch(:user) + "@" if fetch(:user)
+  host = fetch(:domain)
   rsync << "#{user}#{host}:#{rsync_cache.call}"
 
   run.call rsync
@@ -47,12 +47,12 @@ end
 
 namespace :rsync do
   task :create_stage do
-    next if File.directory?(settings.rsync_stage)
+    next if File.directory?(fetch(:rsync_stage))
     print_status "Cloning repository for the first time..."
 
     clone = %w[git clone]
-    clone << settings.repository
-    clone << settings.rsync_stage
+    clone << fetch(:repository)
+    clone << fetch(:rsync_stage)
     run.call clone
   end
 
@@ -60,19 +60,19 @@ namespace :rsync do
   task :stage => %w[create_stage] do
     print_status "Staging..."
 
-    stage = settings.rsync_stage
+    stage = fetch(:rsync_stage)
     git = %W[git --git-dir #{stage}/.git --work-tree #{stage}]
     run.call git + %w[fetch --quiet --all --prune]
 
     # Prefix the Git "HEAD is now at" message, but only if verbose is unset,
     # because then the #print_command called by #run prints its own prefix.
     print "Git checkout: " unless simulate_mode? || verbose_mode?
-    run.call git + %W[reset --hard origin/#{settings.branch}]
+    run.call git + %W[reset --hard origin/#{fetch(:branch)}]
   end
 
   task :build do
     queue %(echo "-> Copying from cache directory to build path")
-    queue! %(#{settings.rsync_copy} "#{rsync_cache.call}/" ".")
+    queue! %(#{fetch(:rsync_copy)} "#{rsync_cache.call}/" ".")
   end
 
   desc "Stage, rsync and copy to the build path."
