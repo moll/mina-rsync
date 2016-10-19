@@ -19,8 +19,8 @@ set :rsync_cache, "shared/deploy"
 
 run = lambda do |*cmd|
   cmd = cmd[0] if cmd[0].is_a?(Array)
-  print_command cmd.join(" ") if simulate_mode? || verbose_mode?
-  Kernel.system *cmd unless simulate_mode?
+  print_command cmd.join(" ") if fetch(:simulate) || fetch(:verbose)
+  Kernel.system *cmd unless fetch(:simulate)
 end
 
 rsync_cache = lambda do
@@ -66,7 +66,7 @@ namespace :rsync do
 
     # Prefix the Git "HEAD is now at" message, but only if verbose is unset,
     # because then the #print_command called by #run prints its own prefix.
-    print "Git checkout: " unless simulate_mode? || verbose_mode?
+    print "Git checkout: " unless fetch(:simulate) || fetch(:verbose)
     run.call git + %W[reset --hard origin/#{fetch(:branch)}]
   end
 
