@@ -5,28 +5,28 @@ require File.expand_path("../rsync/version", __FILE__)
 # private API and internals of Mina::Rsync. If you think something should be
 # public for extending and hooking, please let me know!
 
-set_default :repository, "."
-set_default :branch, "master"
-set_default :rsync_options, []
-set_default :rsync_copy, "rsync --archive --acls --xattrs"
+set :repository, "."
+set :branch, "master"
+set :rsync_options, []
+set :rsync_copy, "rsync --archive --acls --xattrs"
 
 # Stage is used on your local machine for rsyncing from.
-set_default :rsync_stage, "tmp/deploy"
+set :rsync_stage, "tmp/deploy"
 
 # Cache is used on the server to copy files to from to the release directory.
 # Saves you rsyncing your whole app folder each time.
-set_default :rsync_cache, "shared/deploy"
+set :rsync_cache, "shared/deploy"
 
 run = lambda do |*cmd|
   cmd = cmd[0] if cmd[0].is_a?(Array)
-  print_command cmd.join(" ") if simulate_mode? || verbose_mode?
-  Kernel.system *cmd unless simulate_mode?
+  print_command cmd.join(" ") if fetch(:simulate) || fetch(:verbose)
+  Kernel.system *cmd unless fetch(:simulate)
 end
 
 rsync_cache = lambda do
-  cache = settings.rsync_cache
+  cache = fetch(:rsync_cache)
   raise TypeError, "Please set rsync_cache." unless cache
-  cache = settings.deploy_to + "/" + cache if cache && cache !~ /^\//
+  cache = fetch(:deploy_to) + "/" + cache if cache && cache !~ /^\//
   cache
 end
 
@@ -35,11 +35,11 @@ task :rsync => %w[rsync:stage] do
   print_status "Rsyncing to #{rsync_cache.call}..."
 
   rsync = %w[rsync]
-  rsync.concat settings.rsync_options
-  rsync << settings.rsync_stage + "/"
+  rsync.concat fetch(:rsync_options)
+  rsync << fetch(:rsync_stage) + "/"
 
-  user = settings.user + "@" if settings.user
-  host = settings.domain
+  user = fetch(:user) + "@" if fetch(:user)
+  host = fetch(:domain)
   rsync << "#{user}#{host}:#{rsync_cache.call}"
 
   run.call rsync
@@ -47,12 +47,12 @@ end
 
 namespace :rsync do
   task :create_stage do
-    next if File.directory?(settings.rsync_stage)
+    next if File.directory?(fetch(:rsync_stage))
     print_status "Cloning repository for the first time..."
 
     clone = %w[git clone]
-    clone << settings.repository
-    clone << settings.rsync_stage
+    clone << fetch(:repository)
+    clone << fetch(:rsync_stage)
     run.call clone
   end
 
@@ -60,19 +60,19 @@ namespace :rsync do
   task :stage => %w[create_stage] do
     print_status "Staging..."
 
-    stage = settings.rsync_stage
+    stage = fetch(:rsync_stage)
     git = %W[git --git-dir #{stage}/.git --work-tree #{stage}]
     run.call git + %w[fetch --quiet --all --prune]
 
     # Prefix the Git "HEAD is now at" message, but only if verbose is unset,
     # because then the #print_command called by #run prints its own prefix.
-    print "Git checkout: " unless simulate_mode? || verbose_mode?
-    run.call git + %W[reset --hard origin/#{settings.branch}]
+    print "Git checkout: " unless fetch(:simulate) || fetch(:verbose)
+    run.call git + %W[reset --hard origin/#{fetch(:branch)}]
   end
 
   task :build do
-    queue %(echo "-> Copying from cache directory to build path")
-    queue! %(#{settings.rsync_copy} "#{rsync_cache.call}/" ".")
+    command %(echo "-> Copying from cache directory to build path")
+    command %(#{fetch(:rsync_copy)} "#{rsync_cache.call}/" ".")
   end
 
   desc "Stage, rsync and copy to the build path."
